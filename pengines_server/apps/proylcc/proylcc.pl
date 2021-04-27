@@ -35,7 +35,4 @@ put(Contenido, [RowN, ColN], _PistasFilas, _PistasColumnas, Grilla, NewGrilla, 0
 	% En caso contrario (;)
 	% NewRow es el resultado de reemplazar lo que se que haya (_Cell) en la posición ColN de Row por Conenido.	 
 	
-	(replace(Cell, ColN, _, Row, NewRow),
-	Cell == Contenido 
-		;
-	replace(_Cell, ColN, Contenido, Row, NewRow)).
+	(replace(Cell, ColN, _, Row, NewRow), Cell == Contenido ; replace(_Cell, ColN, Contenido, Row, NewRow)).
