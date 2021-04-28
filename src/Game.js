@@ -33,13 +33,15 @@ class Game extends React.Component {
           pistas_columnas: response['PistasColumns']
         });
         
-        //debugger
+        console.log("Columnas");
         this.state.pistas_columnas.forEach((item) => {
           console.log(item)
         });
-
-        console.log(this.state.pistas_filas); //debugger
-        console.log(this.state.pistas_columnas); //debugger
+        console.log("~~~~~~~~~");
+        console.log("Filas");
+        this.state.pistas_filas.forEach((item) => {
+          console.log(item)
+        });
       }
     });
   }
@@ -52,9 +54,12 @@ class Game extends React.Component {
     // Build Prolog query to make the move, which will look as follows:
     // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
     const squaresS = JSON.stringify(this.state.grid).replaceAll('"_"', "_"); // Remove quotes for variables.
-    const queryS = 'put("' + this.state.mode + '", [' + i + ',' + j + ']' 
-    + ', [], [],' + squaresS + ', GrillaRes, FilaSat, ColSat)';
+    const filas = JSON.stringify(this.state.pistas_filas)
+    const columnas = JSON.stringify(this.state.pistas_columnas);
+
+    const queryS = `put(${this.state.mode}, [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
     console.log(queryS); //debugger
+
     this.setState({
       waiting: true
     });
@@ -84,7 +89,7 @@ class Game extends React.Component {
     if (this.state.grid === null) {
       return null;
     }
-    const statusText = 'Keep playing!';
+    // const statusText = 'Keep playing!';
     return (
       <div className="game">
         <Board
@@ -96,9 +101,9 @@ class Game extends React.Component {
         <div>
           Modo actual: <Mode value={this.state.mode} classN="square" onClick={() => this.modeClick()}/>
         </div>
-        <div className="gameInfo">
+        {/* <div className="gameInfo">
           {statusText}
-        </div>
+        </div> */}
       </div>
     );
   }
