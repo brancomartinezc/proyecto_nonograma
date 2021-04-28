@@ -5,7 +5,7 @@ class Board extends React.Component {
     render() {
         const numOfRows = this.props.grid.length;
         const numOfCols = this.props.grid[0].length;
-        console.log(this.props.class_pista);
+        //console.log(this.props.class_pista);
 
         //pistas filas y columnas de testeo
         return (

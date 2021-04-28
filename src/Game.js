@@ -12,7 +12,7 @@ class Game extends React.Component {
     this.state = {
       grid: null,
       waiting: false,
-      actual_mode: "#",
+      mode: "#",
       pistas_filas: null,
       pistas_columnas: null
     };
@@ -52,7 +52,7 @@ class Game extends React.Component {
     // Build Prolog query to make the move, which will look as follows:
     // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
     const squaresS = JSON.stringify(this.state.grid).replaceAll('"_"', "_"); // Remove quotes for variables.
-    const queryS = 'put(' + this.state.actual_mode + ', [' + i + ',' + j + ']' 
+    const queryS = 'put("' + this.state.mode + '", [' + i + ',' + j + ']' 
     + ', [], [],' + squaresS + ', GrillaRes, FilaSat, ColSat)';
     console.log(queryS); //debugger
     this.setState({
@@ -73,10 +73,10 @@ class Game extends React.Component {
   }
 
   modeClick(){
-    if(this.state.actual_mode === "#"){
-      this.setState({ actual_mode: "X" });
+    if(this.state.mode === "#"){
+      this.setState({ mode: "X" });
     }else{
-      this.setState({ actual_mode: "#" });
+      this.setState({ mode: "#" });
     }
   }
 
@@ -94,7 +94,7 @@ class Game extends React.Component {
           onClick={(i, j) => this.handleClick(i,j)}
         />
         <div>
-          Modo actual: <Mode value={this.state.actual_mode} classN="square" onClick={() => this.modeClick()}/>
+          Modo actual: <Mode value={this.state.mode} classN="square" onClick={() => this.modeClick()}/>
         </div>
         <div className="gameInfo">
           {statusText}
