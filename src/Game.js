@@ -56,8 +56,8 @@ class Game extends React.Component {
     const squaresS = JSON.stringify(this.state.grid).replaceAll('"_"', "_"); // Remove quotes for variables.
     const filas = JSON.stringify(this.state.pistas_filas)
     const columnas = JSON.stringify(this.state.pistas_columnas);
-
-    const queryS = `put(${this.state.mode}, [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+    
+    const queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
     console.log(queryS); //debugger
 
     this.setState({

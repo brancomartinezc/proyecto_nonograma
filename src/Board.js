@@ -12,7 +12,6 @@ class Board extends React.Component {
             <div>
 
                 <div className="board"
-                
                  style={{
                     gridTemplateRows: 'repeat(' + 2 + ', 40px)',
                     gridTemplateColumns: 'repeat(' + numOfCols + ', 40px)'
