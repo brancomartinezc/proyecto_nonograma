@@ -11,12 +11,11 @@ class Game extends React.Component {
     super(props);
     this.state = {
       grid: null,
+      rowClues: null,
+      colClues: null,
       waiting: false,
-      mode: "#",
-      pistas_filas: null,
-      pistas_columnas: null
+      mode: "#"
     };
-
     this.handleClick = this.handleClick.bind(this);
     this.handlePengineCreate = this.handlePengineCreate.bind(this);
     this.pengine = new PengineClient(this.handlePengineCreate);
@@ -29,18 +28,8 @@ class Game extends React.Component {
       if (success) {
         this.setState({
           grid: response['Grilla'],
-          pistas_filas: response['PistasFilas'],
-          pistas_columnas: response['PistasColumns']
-        });
-        
-        console.log("Columnas");
-        this.state.pistas_columnas.forEach((item) => {
-          console.log(item)
-        });
-        console.log("~~~~~~~~~");
-        console.log("Filas");
-        this.state.pistas_filas.forEach((item) => {
-          console.log(item)
+          rowClues: response['PistasFilas'],
+          colClues: response['PistasColumns'],
         });
       }
     });
@@ -54,8 +43,9 @@ class Game extends React.Component {
     // Build Prolog query to make the move, which will look as follows:
     // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
     const squaresS = JSON.stringify(this.state.grid).replaceAll('"_"', "_"); // Remove quotes for variables.
-    const filas = JSON.stringify(this.state.pistas_filas)
-    const columnas = JSON.stringify(this.state.pistas_columnas);
+
+    const filas = JSON.stringify(this.state.rowClues)
+    const columnas = JSON.stringify(this.state.colClues);
     
     const queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
     console.log(queryS); //debugger
@@ -89,21 +79,21 @@ class Game extends React.Component {
     if (this.state.grid === null) {
       return null;
     }
-    // const statusText = 'Keep playing!';
+    const statusText = 'Keep playing!';
     return (
       <div className="game">
         <Board
           grid={this.state.grid}
-          pistas_columnas={this.state.pistas_columnas}
-          pistas_filas={this.state.pistas_filas}
+          rowClues={this.state.rowClues}
+          colClues={this.state.colClues}
           onClick={(i, j) => this.handleClick(i,j)}
         />
         <div>
           Modo actual: <Mode value={this.state.mode} classN="square" onClick={() => this.modeClick()}/>
         </div>
-        {/* <div className="gameInfo">
+        {/*<div className="gameInfo">
           {statusText}
-        </div> */}
+        </div>*/}
       </div>
     );
   }
