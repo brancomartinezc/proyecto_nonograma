@@ -24,7 +24,7 @@ replace(X, XIndex, Y, [Xi|Xs], [Xi|XsY]):-
 % put(+Contenido, +Pos, +PistasFilas, +PistasColumnas, +Grilla, -GrillaRes, -FilaSat, -ColSat).
 %
 
-put(Contenido, [RowN, ColN], _PistasFilas, _PistasColumnas, Grilla, NewGrilla, FilaSat, ColSat):-
+put(Contenido, [RowN, ColN], PistasFilas, PistasColumnas, Grilla, NewGrilla, FilaSat, ColSat):-
 	% NewGrilla es el resultado de reemplazar la fila Row en la posición RowN de Grilla
 	% (RowN-ésima fila de Grilla), por una fila nueva NewRow.
 	replace(Row, RowN, NewRow, Grilla, NewGrilla),
@@ -38,7 +38,7 @@ put(Contenido, [RowN, ColN], _PistasFilas, _PistasColumnas, Grilla, NewGrilla, F
 	satisfaceFila(RowN, PistasFilas, NewGrilla, FilaSat),
 	% transpose/2 para rotar la grilla y asi las columnas se vuelven arreglos horizontales
 	transpose(NewGrilla, GrillaRotada),
-	satisfaceColumna(ColN, PistasColumnas, NewGrillaRotada, ColSat).
+	satisfaceColumna(ColN, PistasColumnas, GrillaRotada, ColSat).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -64,6 +64,24 @@ extraerGrupos(L, Grupos) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Dado el numero de fila se la busca entre todas las PistasFilas.
+obtenerPistasFila(0,[H|T], H).
+obtenerPistasFila(N, [H|T], PF):- 
+	N1 is N-1, 
+	obtenerGrupoPistas(N1, PF).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
+%por ejemplo, para [1,4] el grupos ["#"","##"] es incorrecto pero ["#"","####"] si es correcto.
+%verificarNumeros(PistasFila, Grupos)
+verificarNumeros([P|Ps], [G|Gs]):-
+	string_length(G, Length),
+	P = Lenght,
+	verificarNumeros(Ps,Gs).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 /* La fila va a ser invalida hasta que este completa
 	Es decir, "#X## " no satisface las pistas [1, 3]
 	Verificar desde el lado de Javascript cuando marcar como incorrecto?
@@ -77,12 +95,15 @@ extraerGrupos(L, Grupos) :-
 		resuelto y te indican si pintaste un cuadro que no esta pintado en la grilla resuelta)
 */
 satisfaceFila(RowN, PistasFilas, GrillaFilas, FilaSat) :- 
-	nth1(RowN, GrillaFilas, Row),    % obtener la RowN-esima fila
+	nth0(RowN, GrillaFilas, Row),    % obtener la RowN-esima fila
 	srtListConcat(Row, RowString),   % convertirla en un string
 	extraerGrupos(RowString, Grupos),
 	length(Grupos, CantGrupos),      % la longitud de grupos
-	length(PistasFilas, CantGrupos). % y pistas debe ser igual
+	obtenerPistasFila(RowN, PistasFilas, PFila).
+	length(PFila, CantGrupos), % y pistas debe ser igual
 	% FilaSat = 1 si length(Grupos) == length(PistasFilas) y coinciden longitud de grupos con cada pista?
+	verificarNumeros(PFila, Grupos).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 satisfaceColumna(ColN, PistasColumnas, GrillaColumnas, ColSat).
