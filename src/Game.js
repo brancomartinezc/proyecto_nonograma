@@ -13,6 +13,8 @@ class Game extends React.Component {
       grid: null,
       rowClues: null,
       colClues: null,
+      filaSat: null,
+      colSat: null,
       waiting: false,
       mode: "#"
     };
@@ -40,13 +42,13 @@ class Game extends React.Component {
     if (this.state.waiting) {
       return;
     }
-    // Build Prolog query to make the move, which will look as follows:
-    // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
+    
     const squaresS = JSON.stringify(this.state.grid).replaceAll('"_"', "_"); // Remove quotes for variables.
-
     const filas = JSON.stringify(this.state.rowClues)
     const columnas = JSON.stringify(this.state.colClues);
     
+    // Build Prolog query to make the move, which will look as follows:
+    // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
     const queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
     console.log(queryS); //debugger
 
@@ -54,9 +56,12 @@ class Game extends React.Component {
       waiting: true
     });
     this.pengine.query(queryS, (success, response) => {
+      // console.log(response); // DEBUG
       if (success) {
         this.setState({
           grid: response['GrillaRes'],
+          filaSat: response['FilaSat'],
+          colSat: response['ColSat'],
           waiting: false
         });
       } else {
@@ -65,6 +70,10 @@ class Game extends React.Component {
         });
       }
     });
+
+    // console.log('Grid nueva: ' + this.state.grid); // DEBUG
+    console.log('FilaSat: ' + this.state.filaSat); // DEBUG
+    console.log('ColSat: ' + this.state.colSat);   // DEBUG
   }
 
   modeClick(){
@@ -79,7 +88,7 @@ class Game extends React.Component {
     if (this.state.grid === null) {
       return null;
     }
-    const statusText = 'Keep playing!';
+    // const statusText = 'Keep playing!';
     return (
       <div className="game">
         <Board

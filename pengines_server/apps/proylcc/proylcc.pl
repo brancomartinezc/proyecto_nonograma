@@ -2,7 +2,6 @@
 	[  
 		put/8
 	]).
-
 :-use_module(library(lists)).
 :-use_module(library(clpfd)).
 
@@ -38,7 +37,7 @@ put(Contenido, [RowN, ColN], PistasFilas, PistasColumnas, Grilla, NewGrilla, Fil
 	satisfaceFila(RowN, PistasFilas, NewGrilla, FilaSat),
 	% transpose/2 para rotar la grilla y asi las columnas se vuelven arreglos horizontales
 	transpose(NewGrilla, GrillaRotada),
-	satisfaceColumna(ColN, PistasColumnas, GrillaRotada, ColSat).
+	satisfaceFila(ColN, PistasColumnas, GrillaRotada, ColSat).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -48,9 +47,10 @@ srtListConcat([], "").
 srtListConcat([H | T], String) :-
 	srtListConcat(T, Rest),
 	% Si H es un _ o "X" reemplazar por " "
-	% implementar con un findall?
-	((var(H) ; H = "X"),string_concat(" ", Rest, String)
+	((var(H) ; H = "X"),string_concat(" ", Rest, String), ! % <- este cut es importante para prevenir un backtrack
+    														% si no se satisface una fila y prolog intenta hacer que lo haga
 		;
+	% En este caso H es "#"
 	string_concat(H, Rest, String)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,12 +64,13 @@ extraerGrupos(L, Grupos) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/*
 % Dado el numero de fila se la busca entre todas las PistasFilas.
 obtenerPistasFila(0,[H|T], H).
 obtenerPistasFila(N, [H|T], PF):- 
 	N1 is N-1, 
 	obtenerGrupoPistas(N1, PF).
-
+*/
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
@@ -77,7 +78,7 @@ obtenerPistasFila(N, [H|T], PF):-
 %verificarNumeros(PistasFila, Grupos)
 verificarNumeros([P|Ps], [G|Gs]):-
 	string_length(G, Length),
-	P = Lenght,
+	P = Length, /* !,*/ % este cut era por un trace, pero no se necesita
 	verificarNumeros(Ps,Gs).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,15 +96,18 @@ verificarNumeros([P|Ps], [G|Gs]):-
 		resuelto y te indican si pintaste un cuadro que no esta pintado en la grilla resuelta)
 */
 satisfaceFila(RowN, PistasFilas, GrillaFilas, FilaSat) :- 
-	nth0(RowN, GrillaFilas, Row),    % obtener la RowN-esima fila
-	srtListConcat(Row, RowString),   % convertirla en un string
-	extraerGrupos(RowString, Grupos),
-	length(Grupos, CantGrupos),      % la longitud de grupos
-	obtenerPistasFila(RowN, PistasFilas, PFila).
-	length(PFila, CantGrupos), % y pistas debe ser igual
-	% FilaSat = 1 si length(Grupos) == length(PistasFilas) y coinciden longitud de grupos con cada pista?
-	verificarNumeros(PFila, Grupos).
+	(	nth0(RowN, GrillaFilas, Row),    % obtener la RowN-esima fila
+		srtListConcat(Row, RowString),   % convertirla en un string
+		extraerGrupos(RowString, Grupos),
 
+		% obtenerPistasFila(RowN, PistasFilas, PFila),
+		nth0(RowN, PistasFilas, PFila),
+		length(Grupos, CantGrupos), % la longitud de grupos		
+		length(PFila, CantGrupos),  % y pistas debe ser igual
+		% FilaSat = 1 si length(Grupos) == length(PistasFilas) y coinciden longitud de grupos con cada pista
+		verificarNumeros(PFila, Grupos), % Esto verifica esa ultima propiedad
+		FilaSat = 1
+	), !;FilaSat = 0.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-satisfaceColumna(ColN, PistasColumnas, GrillaColumnas, ColSat).
+% satisfaceColumna(ColN, PistasColumnas, GrillaColumnas, ColSat).
