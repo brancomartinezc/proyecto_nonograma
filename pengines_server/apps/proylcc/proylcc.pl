@@ -37,7 +37,7 @@ put(Contenido, [RowN, ColN], PistasFilas, PistasColumnas, Grilla, NewGrilla, Fil
 	satisfaceFila(RowN, PistasFilas, NewGrilla, FilaSat),
 	% transpose/2 para rotar la grilla y asi las columnas se vuelven arreglos horizontales
 	transpose(NewGrilla, GrillaRotada),
-	satisfaceFila(ColN, PistasColumnas, GrillaRotada, ColSat).
+	satisfaceFila(ColN, PistasColumnas, GrillaRotada, ColSat), /*writeln(FilaSat),writeln(ColSat),*/ writeln("").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -76,8 +76,13 @@ obtenerPistasFila(N, [H|T], PF):-
 %Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
 %por ejemplo, para [1,4] el grupos ["#"","##"] es incorrecto pero ["#"","####"] si es correcto.
 %verificarNumeros(PistasFila, Grupos)
+verificarNumeros([],[]).
 verificarNumeros([P|Ps], [G|Gs]):-
 	string_length(G, Length),
+	writeln("P:"), % DEBUG
+	writeln(P), % DEBUG
+	writeln("Lenght:"), % DEBUG
+	writeln(Length), % DEBUG
 	P = Length, /* !,*/ % este cut era por un trace, pero no se necesita
 	verificarNumeros(Ps,Gs).
 
@@ -95,17 +100,23 @@ verificarNumeros([P|Ps], [G|Gs]):-
 	Otros no te marcan hasta que se marca un recuadro incorrecto (es decir, tienen el tablero
 		resuelto y te indican si pintaste un cuadro que no esta pintado en la grilla resuelta)
 */
+%Row, RowString, PFila, Grupos
 satisfaceFila(RowN, PistasFilas, GrillaFilas, FilaSat) :- 
 	(	nth0(RowN, GrillaFilas, Row),    % obtener la RowN-esima fila
 		srtListConcat(Row, RowString),   % convertirla en un string
 		extraerGrupos(RowString, Grupos),
-
+		writeln("Grupos: "), % DEBUG
+		writeln(Grupos), % DEBUG
+		
 		% obtenerPistasFila(RowN, PistasFilas, PFila),
 		nth0(RowN, PistasFilas, PFila),
+		writeln("Pistas: "), % DEBUG
+		writeln(PFila), % DEBUG
 		length(Grupos, CantGrupos), % la longitud de grupos		
 		length(PFila, CantGrupos),  % y pistas debe ser igual
 		% FilaSat = 1 si length(Grupos) == length(PistasFilas) y coinciden longitud de grupos con cada pista
 		verificarNumeros(PFila, Grupos), % Esto verifica esa ultima propiedad
+		writeln("fue true"), % DEBUG
 		FilaSat = 1
 	), !;FilaSat = 0.
 

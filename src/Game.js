@@ -16,7 +16,11 @@ class Game extends React.Component {
       filaSat: null,
       colSat: null,
       waiting: false,
-      mode: "#"
+      mode: "#",
+      /*pFila: null,
+      grupos: null,
+      roww: null,
+      rowstr: null,*/
     };
     this.handleClick = this.handleClick.bind(this);
     this.handlePengineCreate = this.handlePengineCreate.bind(this);
@@ -62,6 +66,10 @@ class Game extends React.Component {
           grid: response['GrillaRes'],
           filaSat: response['FilaSat'],
           colSat: response['ColSat'],
+          /*pFila: response['PFila'],
+          grupos: ['Grupos'],
+          roww: response['Row'],
+          rowstr: response['RowString'],*/
           waiting: false
         });
       } else {
@@ -74,6 +82,11 @@ class Game extends React.Component {
     // console.log('Grid nueva: ' + this.state.grid); // DEBUG
     console.log('FilaSat: ' + this.state.filaSat); // DEBUG
     console.log('ColSat: ' + this.state.colSat);   // DEBUG
+    /*console.log('Row: ' + this.state.roww);   // DEBUG
+    console.log('RowString: ' + this.state.rowstr);   // DEBUG
+    console.log('PFila: ' + this.state.pFila);   // DEBUG
+    console.log('Grupos: ' + this.state.grupos);   // DEBUG*/
+    
   }
 
   modeClick(){
