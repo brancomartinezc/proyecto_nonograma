@@ -78,14 +78,6 @@ class Game extends React.Component {
         });
       }
     });
-
-    // console.log('Grid nueva: ' + this.state.grid); // DEBUG
-    console.log('FilaSat: ' + this.state.filaSat); // DEBUG
-    console.log('ColSat: ' + this.state.colSat);   // DEBUG
-    /*console.log('Row: ' + this.state.roww);   // DEBUG
-    console.log('RowString: ' + this.state.rowstr);   // DEBUG
-    console.log('PFila: ' + this.state.pFila);   // DEBUG
-    console.log('Grupos: ' + this.state.grupos);   // DEBUG*/
     
   }
 
@@ -101,7 +93,13 @@ class Game extends React.Component {
     if (this.state.grid === null) {
       return null;
     }
+    
+    console.log('Grid nueva: ' + this.state.grid); // DEBUG
+    console.log('FilaSat: ' + this.state.filaSat); // DEBUG
+    console.log('ColSat: ' + this.state.colSat);   // DEBUG
+
     // const statusText = 'Keep playing!';
+
     return (
       <div className="game">
         <Board

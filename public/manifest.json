@@ -1,6 +1,6 @@
 {
-  "short_name": "Tic tac toe",
-  "name": "Tic tac toe Sample",
+  "short_name": "Nonograma",
+  "name": "Nonograma - Proyecto LCC",
   "icons": [
     {
       "src": "favicon.ico",
