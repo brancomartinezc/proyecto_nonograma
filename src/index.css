@@ -48,6 +48,10 @@ body {
   margin: 5px;
 }
 
+.satisfies {
+  background: green;
+}
+
 .clue div {
   margin: 2px
 }

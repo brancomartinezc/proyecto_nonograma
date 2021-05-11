@@ -6,7 +6,7 @@ import Mode from './Mode';
 class Game extends React.Component {
 
   pengine;
-
+  
   constructor(props) {
     super(props);
     this.state = {
@@ -17,11 +17,12 @@ class Game extends React.Component {
       colSat: null,
       waiting: false,
       mode: "#",
-      /*pFila: null,
-      grupos: null,
-      roww: null,
-      rowstr: null,*/
+      filasCorrectas: [],
+      colsCorrectas: [],
+      gameWon: false,
+      statusText: "Juego en progreso."
     };
+
     this.handleClick = this.handleClick.bind(this);
     this.handlePengineCreate = this.handlePengineCreate.bind(this);
     this.pengine = new PengineClient(this.handlePengineCreate);
@@ -37,6 +38,19 @@ class Game extends React.Component {
           rowClues: response['PistasFilas'],
           colClues: response['PistasColumns'],
         });
+        
+        //let i = 0; //DEBUG
+        this.state.grid.forEach(() => {
+          this.state.filasCorrectas.push(0);
+          /*console.log(this.state.filasCorrectas[i]) //DEBUG
+          i+=1; //DEBUG*/
+        });
+        //i=0;
+        this.state.grid[0].forEach(() => {
+          this.state.colsCorrectas.push(0);
+          /*console.log(this.state.colsCorrectas[i]) //DEBUG
+          i+=1; //DEBUG*/
+        });
       }
     });
   }
@@ -48,7 +62,7 @@ class Game extends React.Component {
     }
     
     const squaresS = JSON.stringify(this.state.grid).replaceAll('"_"', "_"); // Remove quotes for variables.
-    const filas = JSON.stringify(this.state.rowClues)
+    const filas = JSON.stringify(this.state.rowClues);
     const columnas = JSON.stringify(this.state.colClues);
     
     // Build Prolog query to make the move, which will look as follows:
@@ -66,12 +80,30 @@ class Game extends React.Component {
           grid: response['GrillaRes'],
           filaSat: response['FilaSat'],
           colSat: response['ColSat'],
-          /*pFila: response['PFila'],
-          grupos: ['Grupos'],
-          roww: response['Row'],
-          rowstr: response['RowString'],*/
           waiting: false
         });
+
+        this.state.filasCorrectas[i] = response['FilaSat'];
+        this.state.colsCorrectas[j] = response['ColSat'];
+        //console.log(this.state.filasCorrectas[i]); //DEBUG
+        //console.log(this.state.colsCorrectas[j]); //DEBUG
+        
+        /*this.state.colsCorrectas.forEach((elem, i) => { //DEBUG
+          console.log("col "+i+": "+elem);
+        });*/
+    
+        let todasFilasCorrectas = this.state.filasCorrectas.every(elem => elem === 1);
+        let todasColsCorrectas = this.state.colsCorrectas.every(elem  => elem === 1);
+        
+        if(todasColsCorrectas && todasFilasCorrectas){
+          this.setState({
+            gameWon: true,
+            statusText: "Ganaste!"
+          }) 
+        }
+
+        console.log("juego ganado:" + this.state.gameWon); //DEBUG
+
       } else {
         this.setState({
           waiting: false
@@ -97,23 +129,24 @@ class Game extends React.Component {
     console.log('Grid nueva: ' + this.state.grid); // DEBUG
     console.log('FilaSat: ' + this.state.filaSat); // DEBUG
     console.log('ColSat: ' + this.state.colSat);   // DEBUG
-
-    // const statusText = 'Keep playing!';
-
+    
     return (
       <div className="game">
         <Board
           grid={this.state.grid}
           rowClues={this.state.rowClues}
           colClues={this.state.colClues}
+          lastRowSat={this.state.filaSat}
+          lastColSat={ this.state.colSat}
+          gameWon={this.state.gameWon}
           onClick={(i, j) => this.handleClick(i,j)}
         />
         <div>
-          Modo actual: <Mode value={this.state.mode} classN="square" onClick={() => this.modeClick()}/>
+          Modo actual: <Mode value={this.state.mode} gameWon={this.state.gameWon} classN="square" onClick={() => this.modeClick()}/>
         </div>
-        {/*<div className="gameInfo">
-          {statusText}
-        </div>*/}
+        {<div className="gameInfo">
+          {this.state.statusText}
+        </div>}
       </div>
     );
   }

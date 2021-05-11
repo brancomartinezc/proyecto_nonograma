@@ -10,6 +10,17 @@ class Board extends React.Component {
         const rowClues = this.props.rowClues;
         const colClues = this.props.colClues;
 
+        /*Todavia no se como distinguir cual de todas las clue es la que tiene que pintarse de verde, 
+        capaz ese i en el parametro sirve de algo
+
+        {colClues.map((clue, i) =>
+            <Clue clue={clue} sat={lastColSat} key={i}/>
+        )}
+        
+        */
+        //const lastRowSat =  ((this.props.lastRowSat === 1) ? true : false);
+        //const lastColSat = ((this.props.lastColSat === 1) ? true : false);
+
         return (
             <div className="vertical">
                 <div
@@ -53,6 +64,7 @@ class Board extends React.Component {
                             row.map((cell, j) =>
                                 <Square
                                     value={cell}
+                                    gameWon={this.props.gameWon}
                                     onClick={() => this.props.onClick(i, j)}
                                     key={i + j}
                                 />
