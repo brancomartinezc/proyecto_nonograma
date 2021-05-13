@@ -50,6 +50,8 @@ body {
 
 .satisfies {
   background: green;
+  color: white;
+  font-size: 125%;
 }
 
 .clue div {

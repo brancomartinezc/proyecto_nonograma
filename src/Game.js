@@ -11,6 +11,7 @@ class Game extends React.Component {
     super(props);
     this.state = {
       grid: null,
+      posJugada: [],
       rowClues: null,
       colClues: null,
       filaSat: null,
@@ -71,7 +72,7 @@ class Game extends React.Component {
     console.log(queryS); //debugger
 
     this.setState({
-      waiting: true
+      waiting: true,
     });
     this.pengine.query(queryS, (success, response) => {
       // console.log(response); // DEBUG
@@ -80,6 +81,7 @@ class Game extends React.Component {
           grid: response['GrillaRes'],
           filaSat: response['FilaSat'],
           colSat: response['ColSat'],
+          posJugada: [i,j],
           waiting: false
         });
 
@@ -138,6 +140,7 @@ class Game extends React.Component {
           colClues={this.state.colClues}
           lastRowSat={this.state.filaSat}
           lastColSat={ this.state.colSat}
+          posJugada={this.state.posJugada}
           gameWon={this.state.gameWon}
           onClick={(i, j) => this.handleClick(i,j)}
         />
