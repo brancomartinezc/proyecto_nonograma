@@ -37,7 +37,7 @@ put(Contenido, [RowN, ColN], PistasFilas, PistasColumnas, Grilla, NewGrilla, Fil
 	satisface(RowN, PistasFilas, NewGrilla, FilaSat),
 	% transpose/2 para rotar la grilla y asi las columnas se vuelven arreglos horizontales
 	transpose(NewGrilla, GrillaRotada),
-	satisface(ColN, PistasColumnas, GrillaRotada, ColSat), /*writeln(FilaSat),writeln(ColSat),*/ writeln("").
+	satisface(ColN, PistasColumnas, GrillaRotada, ColSat).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -62,24 +62,6 @@ Split por " ", filtrar los elementos que no sean "" */
 	split_string(L, " ", "", G),
 	findall(X, (member(X, G), X \= ""), Grupos).*/
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%ejemplo: [#,_,X,#,#,] --> [#,x,x,#,#]
-prepararLista([],[]).
-prepararLista([H|T],[x|R]):-
-	(var(H) ; H == "X"),
-    prepararLista(T,R), !.
-prepararLista([H|T],[H|R]):-
-    prepararLista(T,R), !.
-
-%ejemplo: [#,x,x,#,#] --> [[#],[#,#]]
-split(L,P,R):- split(L,P,[],R), !.
-split([],_,[],[]).
-split([],_,S,[S]) :- S \= [].
-split([P|T],P,[],R) :- split(T,P,[],R).
-split([P|T],P,L,[L|R]) :- L \= [], split(T,P,[],R).
-split([H|T],P,L,R) :- H \= P, append(L, [H], L2), split(T,P,L2,R).
-
 %Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
 %por ejemplo, para [1,4] el grupos ["#"","##"] es incorrecto pero ["#"","####"] si es correcto.
 %verificarNumeros(PistasFila, Grupos)
@@ -89,13 +71,6 @@ verificarNumeros([P|Ps], [G|Gs]):-
 	writeln("P:"), % DEBUG
 	writeln(P), % DEBUG
 	verificarNumeros(Ps,Gs).*/
-
-verificarSolucion([],[]).
-verificarSolucion([P|Ps], [G|Gs]):-
-	length(G,P),
-	writeln("P:"), % DEBUG
-	writeln(P), % DEBUG
-	verificarSolucion(Ps,Gs).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -130,18 +105,43 @@ verificarSolucion([P|Ps], [G|Gs]):-
 		FilaSat = 1
 	), !;FilaSat = 0.*/
 
-satisface(RowN, PistasFilas, GrillaFilas, FilaSat) :- 
-	(	nth0(RowN, GrillaFilas, Row),    % obtener la RowN-esima fila de la grilla
-		nth0(RowN, PistasFilas, PFila), % obtener la RowN-esima fila de pistas
-		prepararLista(Row,FilaPreparada),
-		split(FilaPreparada,x,Grupos),
-		writeln("Grupos: "), % DEBUG
-		writeln(Grupos), % DEBUG
-		writeln("Pistas: "), % DEBUG
-		writeln(PFila), % DEBUG
-		verificarSolucion(PFila, Grupos),
-		FilaSat = 1
-	), !;FilaSat = 0.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% satisfaceColumna(ColN, PistasColumnas, GrillaColumnas, ColSat).
+%prepara la lista para despues ingresarla en el split
+%ejemplo: [#,_,X,#,#,] --> [#,x,x,#,#]
+prepararLista([],[]).
+prepararLista([H|T],[x|R]):-
+	(var(H) ; H == "X"),
+    prepararLista(T,R), !.
+prepararLista([H|T],[H|R]):-
+    prepararLista(T,R), !.
+
+%se extraen de la lista los grupos de #
+%ejemplo: [#,x,x,#,#] --> [[#],[#,#]]
+split(L,P,R):- split(L,P,[],R), !.
+split([],_,[],[]). %CB1: si la lista es vacia y la lista auxiliar tambien, devuelve la lista vacia.
+split([],_,L,[L]) :- L \= []. %CB2: si la lista es vacia y la lista auxiliar no lo es, devuelve la auxiliar como sublista de una nueva lista.
+split([P|T],P,[],R) :- split(T,P,[],R). %CR1: si el primer elem de la lista es el pivot y la lista auxiliar es vacia, 
+										%ignora el elem y sigue haciendo split con el resto.
+split([P|T],P,L,[L|R]) :- L \= [], split(T,P,[],R). %CR2: si el primer elem de la lista es el pivot y la lista auxiliar NO es vacia, ignora el elem y
+													%sigue haciendo split con el resto. Al volver de la recursion agrega la auxiliar a la lista resultado.
+split([H|T],P,L,R) :- H \= P, append(L, [H], L2), split(T,P,L2,R). %CR3: si el primer elem de la lista no es el pivot, concatena la lista auxiliar con el 
+																	%elem y sigue haciendo split con el resto de la lista y la nueva lista auxiliar.
+%Comentario extra: la lista auxiliar mantiene los elems del grupo que se recorre en determinado momento.
+
+%Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
+%por ejemplo, para [1,4] el grupos ["#"","##"] es incorrecto pero ["#"","####"] si es correcto.
+verificarSolucion([],[]).
+verificarSolucion([P|Ps], [G|Gs]):-
+	length(G,P),
+	verificarSolucion(Ps,Gs).
+
+%controla si una linea (fila o columna) satisface las pistas.
+satisface(RowN, PistasLineas, GrillaLineas, LineaSat) :- 
+	(	nth0(RowN, GrillaLineas, Row),    % obtener la RowN-esima lineas de la grilla
+		nth0(RowN, PistasLineas, PLinea), % obtener la RowN-esima lineas de pistas
+		prepararLista(Row,LineaPreparada),
+		split(LineaPreparada,x,Grupos),
+		verificarSolucion(PLinea, Grupos),
+		LineaSat = 1
+	), !;LineaSat = 0.
