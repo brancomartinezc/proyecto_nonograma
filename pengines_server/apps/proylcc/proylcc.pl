@@ -118,16 +118,18 @@ prepararLista([H|T],[H|R]):-
 
 %se extraen de la lista los grupos de #
 %ejemplo: [#,x,x,#,#] --> [[#],[#,#]]
+%Comentario extra: la lista auxiliar mantiene los elems del grupo que se recorre en determinado momento. 
+%Por eso cuando el primer elem es un pivot se va mandando una nueva lista auxiliar vacia, esto permite la separacion en sublistas de los grupos.
 split(L,P,R):- split(L,P,[],R), !.
 split([],_,[],[]). %CB1: si la lista es vacia y la lista auxiliar tambien, devuelve la lista vacia.
-split([],_,L,[L]) :- L \= []. %CB2: si la lista es vacia y la lista auxiliar no lo es, devuelve la auxiliar como sublista de una nueva lista.
-split([P|T],P,[],R) :- split(T,P,[],R). %CR1: si el primer elem de la lista es el pivot y la lista auxiliar es vacia, 
-										%ignora el elem y sigue haciendo split con el resto.
-split([P|T],P,L,[L|R]) :- L \= [], split(T,P,[],R). %CR2: si el primer elem de la lista es el pivot y la lista auxiliar NO es vacia, ignora el elem y
-													%sigue haciendo split con el resto. Al volver de la recursion agrega la auxiliar a la lista resultado.
-split([H|T],P,L,R) :- H \= P, append(L, [H], L2), split(T,P,L2,R). %CR3: si el primer elem de la lista no es el pivot, concatena la lista auxiliar con el 
-																	%elem y sigue haciendo split con el resto de la lista y la nueva lista auxiliar.
-%Comentario extra: la lista auxiliar mantiene los elems del grupo que se recorre en determinado momento.
+split([],_,Aux,[Aux]) :- Aux \= []. %CB2: si la lista es vacia y la lista auxiliar no lo es, devuelve la auxiliar como sublista de una nueva lista.
+split([P|T],P,[],R) :- split(T,P,[],R). %CR1: si el primer elem de la lista es el pivot y la lista auxiliar es vacia,
+										%sigue haciendo split con el resto y una nueva lista auxiliar vacia.
+split([P|T],P,Aux,[Aux|R]) :- Aux \= [], split(T,P,[],R). %CR2: si el primer elem de la lista es el pivot y la lista auxiliar NO es vacia,
+													%sigue haciendo split con el resto y nueva lista auxiliar vacia. 
+													%Al volver de la recursion agrega la auxiliar a la lista resultado.
+split([H|T],P,Aux,R) :- H \= P, append(Aux, [H], Aux2), split(T,P,Aux2,R). %CR3: si el primer elem de la lista no es el pivot, concatena la lista auxiliar  
+																	%con el elem y sigue haciendo split con el resto de la lista y la nueva lista auxiliar.
 
 %Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
 %por ejemplo, para [1,4] el grupos ["#"","##"] es incorrecto pero ["#"","####"] si es correcto.
