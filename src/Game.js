@@ -134,6 +134,14 @@ class Game extends React.Component {
     
     return (
       <div className="game">
+        <h1>Nonograma</h1>
+        <div>
+          Modo actual: <Mode value={this.state.mode} gameWon={this.state.gameWon} classN="square" onClick={() => this.modeClick()}/>
+        </div>
+        {<div className="gameInfo">
+          {this.state.statusText}
+        </div>}
+
         <Board
           grid={this.state.grid}
           rowClues={this.state.rowClues}
@@ -144,12 +152,6 @@ class Game extends React.Component {
           gameWon={this.state.gameWon}
           onClick={(i, j) => this.handleClick(i,j)}
         />
-        <div>
-          Modo actual: <Mode value={this.state.mode} gameWon={this.state.gameWon} classN="square" onClick={() => this.modeClick()}/>
-        </div>
-        {<div className="gameInfo">
-          {this.state.statusText}
-        </div>}
       </div>
     );
   }
