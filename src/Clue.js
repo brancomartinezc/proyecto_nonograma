@@ -13,7 +13,7 @@ class Clue extends React.Component {
         if (this.props.sat && !this.state.satisfies) {
             // Si esta pista fue satisfecha en una jugada y era falsa antes, pintar de verde
             this.setState({satisfies: this.props.sat});
-        } else if (!this.props.sat && this.props.satisfies) {
+        } else if (this.props.sat && !this.state.satisfies) {
             // Si esta pista ya estaba pintada y por una jugada dejo de satisfacerse, despintarla
             this.setState({satisfies: this.props.sat});
         }
