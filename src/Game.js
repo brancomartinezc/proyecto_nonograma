@@ -76,23 +76,21 @@ class Game extends React.Component {
     });
     this.pengine.query(queryS, (success, response) => {
       // console.log(response); // DEBUG
+      let auxFilas = [...this.state.filasCorrectas];
+      auxFilas[i] = response['FilaSat'];
+      let auxCols = [...this.state.colsCorrectas];
+      auxCols[j] = response['ColSat'];
+
       if (success) {
         this.setState({
           grid: response['GrillaRes'],
           filaSat: response['FilaSat'],
           colSat: response['ColSat'],
           posJugada: [i,j],
+          filasCorrectas: auxFilas,
+          colsCorrectas: auxCols,
           waiting: false
         });
-
-        this.state.filasCorrectas[i] = response['FilaSat'];
-        this.state.colsCorrectas[j] = response['ColSat'];
-        //console.log(this.state.filasCorrectas[i]); //DEBUG
-        //console.log(this.state.colsCorrectas[j]); //DEBUG
-        
-        /*this.state.colsCorrectas.forEach((elem, i) => { //DEBUG
-          console.log("col "+i+": "+elem);
-        });*/
     
         let todasFilasCorrectas = this.state.filasCorrectas.every(elem => elem === 1);
         let todasColsCorrectas = this.state.colsCorrectas.every(elem  => elem === 1);
@@ -150,6 +148,8 @@ class Game extends React.Component {
           lastColSat={ this.state.colSat}
           posJugada={this.state.posJugada}
           gameWon={this.state.gameWon}
+          filasCorrectas={this.state.filasCorrectas}
+          columnasCorrectas={this.state.colsCorrectas}
           onClick={(i, j) => this.handleClick(i,j)}
         />
       </div>
