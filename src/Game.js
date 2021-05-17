@@ -13,8 +13,6 @@ class Game extends React.Component {
       grid: null,
       rowClues: null,
       colClues: null,
-      filaSat: null,
-      colSat: null,
       waiting: false,
       mode: "#",
       filasCorrectas: [],
@@ -64,7 +62,7 @@ class Game extends React.Component {
     // Build Prolog query to make the move, which will look as follows:
     // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
     const queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
-    console.log(queryS); //debugger
+    //console.log(queryS); //DEBUG
 
     this.setState({
       waiting: true,
@@ -81,7 +79,6 @@ class Game extends React.Component {
           grid: response['GrillaRes'],
           filaSat: response['FilaSat'],
           colSat: response['ColSat'],
-          posJugada: [i,j],
           filasCorrectas: auxFilas,
           colsCorrectas: auxCols,
           waiting: false
@@ -120,15 +117,11 @@ class Game extends React.Component {
       return null;
     }
     
-    console.log('Grid nueva: ' + this.state.grid); // DEBUG
-    console.log('FilaSat: ' + this.state.filaSat); // DEBUG
-    console.log('ColSat: ' + this.state.colSat);   // DEBUG
-    
     return (
       <div className="game">
         <h1>Nonograma</h1>
         <div>
-          Modo actual: <Mode value={this.state.mode} gameWon={this.state.gameWon} classN="square" onClick={() => this.modeClick()}/>
+          Modo actual: <Mode value={this.state.mode} gameWon={this.state.gameWon} onClick={() => this.modeClick()}/>
         </div>
         {<div className="gameInfo">
           {this.state.statusText}
