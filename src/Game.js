@@ -11,7 +11,6 @@ class Game extends React.Component {
     super(props);
     this.state = {
       grid: null,
-      posJugada: [],
       rowClues: null,
       colClues: null,
       filaSat: null,
@@ -40,17 +39,13 @@ class Game extends React.Component {
           colClues: response['PistasColumns'],
         });
         
-        //let i = 0; //DEBUG
+        //inicializacion de arreglos de control de filas y columnas correctas.
         this.state.grid.forEach(() => {
           this.state.filasCorrectas.push(0);
-          /*console.log(this.state.filasCorrectas[i]) //DEBUG
-          i+=1; //DEBUG*/
         });
-        //i=0;
+
         this.state.grid[0].forEach(() => {
           this.state.colsCorrectas.push(0);
-          /*console.log(this.state.colsCorrectas[i]) //DEBUG
-          i+=1; //DEBUG*/
         });
       }
     });
@@ -75,10 +70,10 @@ class Game extends React.Component {
       waiting: true,
     });
     this.pengine.query(queryS, (success, response) => {
-      // console.log(response); // DEBUG
-      let auxFilas = [...this.state.filasCorrectas];
+      
+      let auxFilas = this.state.filasCorrectas.slice();
       auxFilas[i] = response['FilaSat'];
-      let auxCols = [...this.state.colsCorrectas];
+      let auxCols = this.state.colsCorrectas.slice();
       auxCols[j] = response['ColSat'];
 
       if (success) {
@@ -91,7 +86,8 @@ class Game extends React.Component {
           colsCorrectas: auxCols,
           waiting: false
         });
-    
+        
+        //control de victoria, si todas las filas y columnas son correctas gano.
         let todasFilasCorrectas = this.state.filasCorrectas.every(elem => elem === 1);
         let todasColsCorrectas = this.state.colsCorrectas.every(elem  => elem === 1);
         
@@ -101,8 +97,6 @@ class Game extends React.Component {
             statusText: "Ganaste!"
           }) 
         }
-
-        console.log("juego ganado:" + this.state.gameWon); //DEBUG
 
       } else {
         this.setState({
@@ -144,9 +138,6 @@ class Game extends React.Component {
           grid={this.state.grid}
           rowClues={this.state.rowClues}
           colClues={this.state.colClues}
-          lastRowSat={this.state.filaSat}
-          lastColSat={ this.state.colSat}
-          posJugada={this.state.posJugada}
           gameWon={this.state.gameWon}
           filasCorrectas={this.state.filasCorrectas}
           columnasCorrectas={this.state.colsCorrectas}

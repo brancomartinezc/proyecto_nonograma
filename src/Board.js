@@ -10,12 +10,6 @@ class Board extends React.Component {
         const rowClues = this.props.rowClues;
         const colClues = this.props.colClues;
 
-        // const lastRowSat =  ((this.props.lastRowSat === 1) ? true : false);
-        // const lastColSat = ((this.props.lastColSat === 1) ? true : false);
-
-        // const lastRowJugada = this.props.posJugada[0];
-        // const lastColJugada = this.props.posJugada[1];
-
         return (
             <div className="vertical">
                 <div
