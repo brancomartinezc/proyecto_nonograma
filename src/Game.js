@@ -77,8 +77,6 @@ class Game extends React.Component {
       if (success) {
         this.setState({
           grid: response['GrillaRes'],
-          filaSat: response['FilaSat'],
-          colSat: response['ColSat'],
           filasCorrectas: auxFilas,
           colsCorrectas: auxCols,
           waiting: false
