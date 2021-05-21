@@ -40,9 +40,12 @@ put(Contenido, [RowN, ColN], PistasFilas, PistasColumnas, Grilla, NewGrilla, Fil
 	satisface(ColN, PistasColumnas, GrillaRotada, ColSat).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% prepararLista(+Lista, -ListaPreparada).
+%
+% Prepara la lista para despues ingresarla en el split
+% Ejemplo: [#,_,X,#,#,] --> [#,x,x,#,#]
 
-%prepara la lista para despues ingresarla en el split
-%ejemplo: [#,_,X,#,#,] --> [#,x,x,#,#]
 prepararLista([],[]).
 prepararLista([H|T],[x|R]):-
 	(var(H) ; H == "X"),
@@ -50,10 +53,15 @@ prepararLista([H|T],[x|R]):-
 prepararLista([H|T],[H|R]):-
     prepararLista(T,R), !.
 
-%se extraen de la lista los grupos de #
-%ejemplo: [#,x,x,#,#] --> [[#],[#,#]]
-%Comentario extra: la lista auxiliar mantiene los elems del grupo que se recorre en determinado momento. 
-%Por eso cuando el primer elem es un pivot se va mandando una nueva lista auxiliar vacia, esto permite la separacion en sublistas de los grupos.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% split(+Lista, +Separador, -ListaGrupos).
+%
+% Se extraen de la lista los grupos de #
+% Ejemplo: [#,x,x,#,#] --> [[#],[#,#]]
+% Comentario extra: la lista auxiliar mantiene los elems del grupo que se recorre en determinado momento. 
+% Por eso cuando el primer elem es un pivot se va mandando una nueva lista auxiliar vacia, esto permite la separacion en sublistas de los grupos.
+
 split(L,P,R):- split(L,P,[],R), !.
 split([],_,[],[]). %CB1: si la lista es vacia y la lista auxiliar tambien, devuelve la lista vacia.
 split([],_,Aux,[Aux]) :- Aux \= []. %CB2: si la lista es vacia y la lista auxiliar no lo es, devuelve la auxiliar como sublista de una nueva lista.
@@ -65,14 +73,27 @@ split([P|T],P,Aux,[Aux|R]) :- Aux \= [], split(T,P,[],R). %CR2: si el primer ele
 split([H|T],P,Aux,R) :- H \= P, append(Aux, [H], Aux2), split(T,P,Aux2,R). %CR3: si el primer elem de la lista no es el pivot, concatena la lista auxiliar  
 																	%con el elem y sigue haciendo split con el resto de la lista y la nueva lista auxiliar.
 
-%Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
-%por ejemplo, para [1,4] el grupos ["#"","##"] es incorrecto pero ["#"","####"] si es correcto.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% verificarSolucion(+Pistas, +Grupos).
+%
+% Controla que las pistas de una fila y los grupos resultantes de las jugadas del usuario sean igual
+% Por ejemplo, para [1,4] el grupos ["#" ,"##"] es incorrecto pero ["#" ,"####"] si es correcto.
 verificarSolucion([],[]).
 verificarSolucion([P|Ps], [G|Gs]):-
 	length(G,P),
 	verificarSolucion(Ps,Gs).
 
-%controla si una linea (fila o columna) satisface las pistas.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% satisface(+RowN, +PistasLineas, +GrillaLineas, -LineaSat).
+%
+% Controla si una linea (fila o columna) satisface las pistas.
+% La forma del cuerpo con un grupo entre parentesis indica: si todo dentro se satisface,
+% LineaSat se unifica con 1, pero si algo no lo hace, se toma el camino alternativo de
+% unificar LineaSat con 0. Esto logra que el predicado nunca devuelva false, dejando
+% que la parte de React tome decisiones respecto a LineaSat
 satisface(RowN, PistasLineas, GrillaLineas, LineaSat) :- 
 	(	nth0(RowN, GrillaLineas, Row),    % obtener la RowN-esima lineas de la grilla
 		nth0(RowN, PistasLineas, PLinea), % obtener la RowN-esima lineas de pistas
