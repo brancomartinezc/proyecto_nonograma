@@ -14,6 +14,8 @@ class Game extends React.Component {
       rowClues: null,
       colClues: null,
       waiting: false,
+      estadoRevelandoCelda: false,
+      estadoRevelandoTablero: false,
       mode: "#",
       filasCorrectas: [],
       colsCorrectas: [],
@@ -50,8 +52,12 @@ class Game extends React.Component {
   }
 
   handleClick(i, j) {
-    // No action on click if we are waiting.
-    if (this.state.waiting) {
+    if (this.state.waiting || this.state.estadoRevelandoTablero) {
+      return;
+    }
+
+    if (this.state.estadoRevelandoCelda) {
+      console.log("revelar celda clickeada");
       return;
     }
     
@@ -103,11 +109,30 @@ class Game extends React.Component {
   }
 
   modeClick(){
-    if(this.state.mode === "#"){
+    if (this.state.mode === "#"){
       this.setState({ mode: "X" });
-    }else{
+    } else{
       this.setState({ mode: "#" });
     }
+  }
+
+  revelarTablero() {
+    // revelar tablero y deshabilitar interaccion hasta que se haga click en revelarTablero() de vuelta?
+    // agregar una variable de estado en this.state?
+
+    // console.log("tablero");
+    this.setState({ estadoRevelandoTablero: !this.state.estadoRevelandoTablero });    
+  }
+
+  revelarCelda() {
+    // Cambiar a un modo donde hacer click a una celda revela su contenido?
+    // Despues de revelar el contenido deberiamos enviar un put al servidor de prolog?
+    // o revelar simplemente revela sin afectar el estado del tablero?
+    // No parece muy util no hacer el put si el jugador ya sabe el contenido de la celda
+    // agregar una variable de estado en this.state?
+
+    // console.log("celda");
+    this.setState({ estadoRevelandoCelda: !this.state.estadoRevelandoCelda });
   }
 
   render() {
@@ -119,8 +144,9 @@ class Game extends React.Component {
       <div className="game">
         <h1>Nonograma</h1>
         <div>
-          Modo actual: <Mode value={this.state.mode} gameWon={this.state.gameWon} onClick={() => this.modeClick()}/>
+          Modo actual: <Mode value={this.state.mode} class={"square"} gameWon={this.state.gameWon} onClick={() => this.modeClick()}/>
         </div>
+
         {<div className="gameInfo">
           {this.state.statusText}
         </div>}
@@ -134,6 +160,14 @@ class Game extends React.Component {
           columnasCorrectas={this.state.colsCorrectas}
           onClick={(i, j) => this.handleClick(i,j)}
         />
+
+        <div>
+          <Mode value={"🔍 Revelar celda"} class={"revelarCelda"} gameWon={this.state.gameWon} onClick={() => this.revelarCelda()}/>
+        </div>
+
+        <div>
+          <Mode value={"🏁 Revelar tablero"} class={"revelarTablero"} gameWon={this.state.gameWon} onClick={() => this.revelarTablero()}/>
+        </div>
       </div>
     );
   }
