@@ -102,3 +102,142 @@ satisface(RowN, PistasLineas, GrillaLineas, LineaSat) :-
 		verificarSolucion(PLinea, Grupos),
 		LineaSat = 1
 	), !;LineaSat = 0.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Codigo de resolucion: Proyecto 2
+
+/* Testear con
+    solve([[3], [1,2], [3], [5], [5]],
+      [[2], [5], [1,3], [5], [1, 2]],
+      S), !.
+      
+      El cut al final es porque genera varias veces la misma solucion
+      Entonces corta el backtracking y deja una sola hecha
+      
+      El resultado S es el arreglo que tiene N arreglos, cada uno con todas las soluciones
+      de las N filas del tablero.
+*/
+
+% PF es PistasFilas, PC es PistasColumnas
+% Intercambiar TodasLasSoluciones por GrillaResuelta despues
+solve(PF, PC, TodasLasSoluciones) :-
+    length(PC, CantidadPistas),
+    length(PF, NFilas),
+    generarSolucionesDeTodasLasFilas(CantidadPistas, PF, Soluciones),
+    % Para hacer despues: invertir la generacion de soluciones en el predicado anterior elimina este reverse
+    reverse(Soluciones, TodasLasSoluciones),
+    !, % no mas backtracking desde este punto, ya tenemos las soluciones
+
+    % Con TodasLasSoluciones seleccionar de a un elemento de cada uno
+    % construir la grilla, transponer y checkear que se satisfacen todas las columnas
+    % Como las filas ya estan trivialmente satisfechas, cuando todas las columnas se satisfacen 
+    % a la vez, esta resuelto el tablero, y se puede devolver a la parte de JS
+    % Multiples soluciones para un tablero?
+    testearCombinaciones(NFilas, PC, TodasLasSoluciones).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% agregar un parametro mas que tiene la grilla resuelta
+testearCombinaciones(NFilas, _PistasColumnas, Soluciones) :-
+    configuracion(0, NFilas, Soluciones, Config),
+    write(Config), nl. % debug
+    % testearSolucion deberia transponer la config. y testearlo con los predicados que ya tenemos
+    % testearSolucion(...)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% configuracion(+Indice, +CantidadDeFilas, +SolucionesDeTodasLasFilas, +ConfiguracionPosible)
+% Toma de cada grupo de soluciones por fila una sola, y arma la grilla en +ConfiguracionPosible
+configuracion(NFilas, NFilas, _Soluciones, []).
+configuracion(Idx, NFilas, Soluciones, Configuracion) :-
+    Siguiente is Idx + 1,
+    nth0(Idx, Soluciones, FilaPosibleSoluciones),
+    member(SolucionPosible, FilaPosibleSoluciones),
+    configuracion(Siguiente, NFilas, Soluciones, RestoDeLaConfig),
+    append([SolucionPosible], RestoDeLaConfig, Configuracion).
+
+% ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
+% ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
+% generarSolucionesDeTodasLasFilas(+CantidadFilas, +PistasFilas, -ListaSoluciones)
+generarSolucionesDeTodasLasFilas(0, _PF, []) :- !.
+
+% CantidadFilas es el indice
+generarSolucionesDeTodasLasFilas(CantidadFilas, PistasFilas, ListaSoluciones) :-
+    nth1(CantidadFilas, PistasFilas, PistaFilaActual), % seleccionar la ultima pista
+    CantPrev is CantidadFilas - 1,
+    length(PistasFilas, LongitudFila),
+    generarSolucionesDeUnaFila(PistaFilaActual, LongitudFila, Soluciones), % encontrar las soluciones para la ultima fila segun su pista
+    generarSolucionesDeTodasLasFilas(CantPrev, PistasFilas, RestoDeLasSoluciones), % recursivamente continuar
+    append([Soluciones], RestoDeLasSoluciones, ListaSoluciones).
+
+% ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
+% [1,3] -> [todas las soluciones de longitud LongitudLinea que conforman [1,3]]
+generarSolucionesDeUnaFila(PistasFila, LongitudLinea, SolucionesFila) :-
+    length(Solucion, LongitudLinea),
+    grupos(PistasFila, Grupos),
+    findall(Solucion, validarEspaciado(Grupos, Solucion), SolucionesFila).
+
+% % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
+% % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
+% % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
+% Para testear lo que esta abajo de esta linea llamar con algo como
+% length(_L, 10), grupos([1,1,1], _G), findall(_L, validarEspaciado(_G, _L), Ls).
+
+generarGrupo(0, []).
+generarGrupo(P, L) :-
+    Prev is P - 1,
+    generarGrupo(Prev, SubL),
+    append(["#"], SubL, L),
+    !. % no seguir generando
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Caso donde solo hay una pista
+grupos([P], [Grupo]) :-
+    generarGrupo(P, Grupo).
+
+% Caso donde hay multiples pistas
+% Generar la primera, y despues generar el resto con espacios adelante
+grupos([P | Ps], [Grupo | Grupos]) :-
+    generarGrupo(P, Grupo),
+    gruposConEspacio(Ps, Grupos).
+
+% despues del primero, generar el resto de los grupos con un espacio adelante
+% Para descartar los casos donde van juntos
+gruposConEspacio([], []) :- !.
+gruposConEspacio([P | Ps], [GrupoV1 | Grupos]) :-
+    generarGrupo(P, Grupo),
+    append(["X"], Grupo, GrupoV1),
+    gruposConEspacio(Ps, Grupos).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% validarEspaciado(+Grupos, +Linea)
+
+% Caso donde no hay grupos
+validarEspaciado([], []) :- !.
+
+% Caso donde la linea empieza con "X"
+% Consume todas las "X"s iniciales
+validarEspaciado(Grupos, ["X" | Resto]) :-
+    validarEspaciado(Grupos, Resto).
+
+% Caso donde no comienza con "X" (porque si lo hace entraria a la otra regla)
+validarEspaciado([G|Gs], Linea) :-
+    comienzaCon(G, Linea, Resto), % comienzaCon consume el grupo G del principio de la linea, y deja lo sobrante en Resto
+    validarEspaciado(Gs, Resto). % seguir validando los otros grupos con el sobrante de la linea
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% comienzaCon(+Grupo, +Linea, +RestoDeLaLinea)
+
+% Si el grupo esta vacio no se consume nada y el resto es la linea misma
+comienzaCon([], Linea, Linea).
+
+% Si el grupo no esta vacio, se espera que el primer elemento del grupo sea
+% el mismo que el de la linea (por eso la misma variable P).
+% Se llama recursivamente a comienzaCon hasta encontrar todo el grupo en la linea
+% Resto queda con el resto de la linea para seguir buscando grupos en validarEspaciado
+comienzaCon([P|Ps], [P | Linea], Resto) :-
+    comienzaCon(Ps, Linea, R),
+    append(R,[], Resto).
