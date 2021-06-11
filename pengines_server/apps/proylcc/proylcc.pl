@@ -124,7 +124,7 @@ solve(PistasFilas, PistasColumnas, GrillaResuelta) :-
     length(PistasColumnas, LongitudFila),
     generarSolucionesDeTodasLasFilas(PistasFilas, LongitudFila, TodasLasSoluciones),
     length(TodasLasSoluciones, Sols), % debug
-	write("Hay "), write(Sols), write(" arreglos de soluciones: "), nl, % debug
+	%write("Hay "), write(Sols), write(" arreglos de soluciones: "), nl, % debug
     !, % no mas backtracking desde este punto, ya tenemos las soluciones
 
     % Con TodasLasSoluciones seleccionar de a un elemento de cada uno

@@ -14,6 +14,8 @@ class Game extends React.Component {
       rowClues: null,
       colClues: null,
       waiting: false,
+      grillaEnJuego: null,
+      grillaResuelta: null,
       estadoRevelandoCelda: false,
       estadoRevelandoTablero: false,
       mode: "#",
@@ -47,17 +49,29 @@ class Game extends React.Component {
         this.state.grid[0].forEach(() => {
           this.state.colsCorrectas.push(0);
         });
+
+        this.obtenerSolucion();
       }
     });
   }
 
+  //query a prolog para obtener la solucion de la grilla
+  obtenerSolucion(){
+    const filas = JSON.stringify(this.state.rowClues);
+    const columnas = JSON.stringify(this.state.colClues);
+    const queryS = `solve(${filas}, ${columnas}, Solucion)`;
+
+    this.pengine.query(queryS, (succes, response) => {
+      if(succes){
+        this.setState({
+          grillaResuelta: response['Solucion']
+        });
+      }
+    });
+  }
+  
   handleClick(i, j) {
     if (this.state.waiting || this.state.estadoRevelandoTablero) {
-      return;
-    }
-
-    if (this.state.estadoRevelandoCelda) {
-      console.log("revelar celda clickeada");
       return;
     }
     
@@ -67,7 +81,10 @@ class Game extends React.Component {
     
     // Build Prolog query to make the move, which will look as follows:
     // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
-    const queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+    // si esta revelando celda se pinta lo que coresponde, sino, se pinta lo que el jugador eligio
+    const queryS = !this.state.estadoRevelandoCelda ? 
+    `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)` : 
+    `put("${this.state.grillaResuelta[i][j]}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
     //console.log(queryS); //DEBUG
 
     this.setState({
@@ -117,22 +134,32 @@ class Game extends React.Component {
   }
 
   revelarTablero() {
-    // revelar tablero y deshabilitar interaccion hasta que se haga click en revelarTablero() de vuelta?
-    // agregar una variable de estado en this.state?
-
-    // console.log("tablero");
-    this.setState({ estadoRevelandoTablero: !this.state.estadoRevelandoTablero });    
+    if(!this.state.estadoRevelandoTablero){
+      this.setState({ 
+        estadoRevelandoTablero: true,
+        grillaEnJuego: this.state.grid, //guarda la grilla del jugador
+        grid: this.state.grillaResuelta
+      });  
+    }else{
+      this.setState({ 
+        estadoRevelandoTablero: false,
+        grid: this.state.grillaEnJuego
+      });
+    }
   }
 
   revelarCelda() {
-    // Cambiar a un modo donde hacer click a una celda revela su contenido?
-    // Despues de revelar el contenido deberiamos enviar un put al servidor de prolog?
-    // o revelar simplemente revela sin afectar el estado del tablero?
-    // No parece muy util no hacer el put si el jugador ya sabe el contenido de la celda
-    // agregar una variable de estado en this.state?
-
-    // console.log("celda");
-    this.setState({ estadoRevelandoCelda: !this.state.estadoRevelandoCelda });
+    if(!this.state.estadoRevelandoCelda){
+      this.setState({ 
+        estadoRevelandoCelda: true,
+        statusText: "Revelando celdas."
+      });
+    }else{
+      this.setState({ 
+        estadoRevelandoCelda: false,
+        statusText: "Juego en progreso."
+      });
+    }
   }
 
   render() {
