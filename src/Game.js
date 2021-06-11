@@ -71,6 +71,7 @@ class Game extends React.Component {
   }
   
   handleClick(i, j) {
+    // No permitir interaccion con el usuario en ambos casos
     if (this.state.waiting || this.state.estadoRevelandoTablero) {
       return;
     }
@@ -82,9 +83,21 @@ class Game extends React.Component {
     // Build Prolog query to make the move, which will look as follows:
     // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
     // si esta revelando celda se pinta lo que coresponde, sino, se pinta lo que el jugador eligio
-    const queryS = !this.state.estadoRevelandoCelda ? 
-    `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)` : 
-    `put("${this.state.grillaResuelta[i][j]}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+    let queryS;
+
+    if (this.state.estadoRevelandoCelda) {
+        // Si el valor actual ya coincide con el valor correcto, revelar no deberia limpiar la celda, asi que se retorna
+        if (this.state.grid[i][j] == this.state.grillaResuelta[i][j]) {
+          return;
+        } else {
+          // En este caso, se revela la celda correcta
+          queryS = `put("${this.state.grillaResuelta[i][j]}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+        }
+    } else {
+      // En este caso no se esta revelando, asi que se envia a Prolog el valor seleccionado por el usuario
+      queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+    }
+
     //console.log(queryS); //DEBUG
 
     this.setState({
