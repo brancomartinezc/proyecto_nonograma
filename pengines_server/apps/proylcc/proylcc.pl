@@ -4,6 +4,7 @@
 	]).
 :-use_module(library(lists)).
 :-use_module(library(clpfd)).
+:- use_rendering(table).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -109,25 +110,21 @@ satisface(RowN, PistasLineas, GrillaLineas, LineaSat) :-
 % Codigo de resolucion: Proyecto 2
 
 /* Testear con
-    solve([[3], [1,2], [3], [5], [5]],
-      [[2], [5], [1,3], [5], [1, 2]],
-      S), !.
-      
-      El cut al final es porque genera varias veces la misma solucion
-      Entonces corta el backtracking y deja una sola hecha
-      
-      El resultado S es el arreglo que tiene N arreglos, cada uno con todas las soluciones
-      de las N filas del tablero.
+    solve([[3], [1,2], [3], [5], [5]], [[2], [5], [1,3], [5], [1, 2]], S), !
+    solve([[2,1], [1,3], [1,2], [3], [4]], [[1], [5], [2], [4], [2,1], [2]], S), !
+
+    configuracion( [[["X", "X", "#", "#", "#"], ["X", "#", "#", "#", "X"], ["#", "#", "#", "X", "X"]], [["X", "#", "X", "#", "#"], ["#", "X", "X", "#", "#"], ["#", "X", "#", "#", "X"]], [["X", "X", "#", "#", "#"], ["X", "#", "#", "#", "X"], ["#", "#", "#", "X", "X"]], [["#", "#", "#", "#", "#"]], [["#", "#", "#", "#", "#"]]], Config), !
+
+    El cut al final es porque genera varias veces la misma solucion
+    Entonces corta el backtracking y deja una sola hecha
 */
 
-% PF es PistasFilas, PC es PistasColumnas
 % Intercambiar TodasLasSoluciones por GrillaResuelta despues
-solve(PF, PC, TodasLasSoluciones) :-
-    length(PC, CantidadPistas),
-    length(PF, NFilas),
-    generarSolucionesDeTodasLasFilas(CantidadPistas, PF, Soluciones),
-    % Para hacer despues: invertir la generacion de soluciones en el predicado anterior elimina este reverse
-    reverse(Soluciones, TodasLasSoluciones),
+solve(PistasFilas, PistasColumnas, GrillaResuelta) :-
+    length(PistasColumnas, LongitudFila),
+    generarSolucionesDeTodasLasFilas(PistasFilas, LongitudFila, TodasLasSoluciones),
+    length(TodasLasSoluciones, Sols), % debug
+	write("Hay "), write(Sols), write(" arreglos de soluciones: "), nl, % debug
     !, % no mas backtracking desde este punto, ya tenemos las soluciones
 
     % Con TodasLasSoluciones seleccionar de a un elemento de cada uno
@@ -135,41 +132,67 @@ solve(PF, PC, TodasLasSoluciones) :-
     % Como las filas ya estan trivialmente satisfechas, cuando todas las columnas se satisfacen 
     % a la vez, esta resuelto el tablero, y se puede devolver a la parte de JS
     % Multiples soluciones para un tablero?
-    testearCombinaciones(NFilas, PC, TodasLasSoluciones).
+    testearCombinaciones(PistasColumnas, TodasLasSoluciones, GrillaResuelta).
+	% write("Resultado "), write(GrillaResuelta), nl.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%%%%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+/*
+ * Dado un tablero NxM, testearCombinaciones(N, [M pistas], [N arreglos de soluciones de cada una de las N filas], GrillaFinal)
+ * Encuentra una config que satisface las columnas al transponer la grilla compuesta por la eleccion de
+ * una solucion por fila de entre el arreglo de soluciones
+ * */
 % agregar un parametro mas que tiene la grilla resuelta
-testearCombinaciones(NFilas, _PistasColumnas, Soluciones) :-
-    configuracion(0, NFilas, Soluciones, Config),
-    write(Config), nl. % debug
-    % testearSolucion deberia transponer la config. y testearlo con los predicados que ya tenemos
-    % testearSolucion(...)
+testearCombinaciones(PistasColumnas, Soluciones, Config) :-
+    configuracion(Soluciones, Config), % config es una grilla posible tomando de a una solucion por fila
+    % write("Config: "),write(Config), nl, % debug
+    % Se transpone esta grilla para ver si las columnas son satisfechas
+    % Como las filas estan compuestas siempre de sus soluciones, con solo validar las columnas es suficiente
+    % para determinar si tenemos una solucion valida al tablero
+    transpose(Config,ConfigRotada),
+    % write("Config rotada:"),write(ConfigRotada),nl, % debug
+    testearSolucion(ConfigRotada,PistasColumnas).
+    % write("Config Correcta:"),write(Config),nl. % debug
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% configuracion(+Indice, +CantidadDeFilas, +SolucionesDeTodasLasFilas, +ConfiguracionPosible)
-% Toma de cada grupo de soluciones por fila una sola, y arma la grilla en +ConfiguracionPosible
-configuracion(NFilas, NFilas, _Soluciones, []).
-configuracion(Idx, NFilas, Soluciones, Configuracion) :-
-    Siguiente is Idx + 1,
-    nth0(Idx, Soluciones, FilaPosibleSoluciones),
-    member(SolucionPosible, FilaPosibleSoluciones),
-    configuracion(Siguiente, NFilas, Soluciones, RestoDeLaConfig),
-    append([SolucionPosible], RestoDeLaConfig, Configuracion).
+% testearSolucion(+Lineas, +Pistas)
+testearSolucion([],[]).
+testearSolucion([L|Ls],[P|Ps]):-
+    /*
+	% assert length(Lineas) == length(Pistas)?
+    length(Ls, LenL),
+    length(Ps, LenP),
+    LengthLineas is LenL  + 1,
+    LengthPistas is LenP + 1,
+    write("Cantidad de lineas en testearSolucion "),write(LengthLineas), nl,
+    write("Cantidad de pistas en testearSolucion "),write(LengthPistas), nl,
+    */
+    split(L,"X",Grupos),
+    verificarSolucion(P,Grupos),
+    testearSolucion(Ls,Ps). 
+
+%%%%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%%%%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% configuracion(+SolucionesDeTodasLasFilas, -ConfiguracionPosible)
+configuracion([], []).
+configuracion([Soluciones | RestoDeLasSoluciones], Configuracion) :-
+    member(SolucionPosible, Soluciones), % tomar uno de entre todas las soluciones de una de las filas
+    configuracion(RestoDeLasSoluciones, RestoDeLaConfig), % hacer lo mismo con el resto de las filas
+    append([SolucionPosible], RestoDeLaConfig, Configuracion). % ubicarlo todo en una grilla
 
 % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
 % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
-% generarSolucionesDeTodasLasFilas(+CantidadFilas, +PistasFilas, -ListaSoluciones)
-generarSolucionesDeTodasLasFilas(0, _PF, []) :- !.
 
-% CantidadFilas es el indice
-generarSolucionesDeTodasLasFilas(CantidadFilas, PistasFilas, ListaSoluciones) :-
-    nth1(CantidadFilas, PistasFilas, PistaFilaActual), % seleccionar la ultima pista
-    CantPrev is CantidadFilas - 1,
-    length(PistasFilas, LongitudFila),
-    generarSolucionesDeUnaFila(PistaFilaActual, LongitudFila, Soluciones), % encontrar las soluciones para la ultima fila segun su pista
-    generarSolucionesDeTodasLasFilas(CantPrev, PistasFilas, RestoDeLasSoluciones), % recursivamente continuar
+% generarSolucionesDeTodasLasFilas(+Pistas, +LongitudFila, -ListaSoluciones)
+generarSolucionesDeTodasLasFilas([], _LF, []).
+generarSolucionesDeTodasLasFilas([P | Ps], LongitudFila, ListaSoluciones) :-
+    generarSolucionesDeUnaFila(P, LongitudFila, Soluciones),
+    generarSolucionesDeTodasLasFilas(Ps, LongitudFila, RestoDeLasSoluciones),
     append([Soluciones], RestoDeLasSoluciones, ListaSoluciones).
 
 % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
