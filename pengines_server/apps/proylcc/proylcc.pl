@@ -127,6 +127,10 @@ solve(PistasFilas, PistasColumnas, GrillaResuelta) :-
     generarSolucionesDeTodasLasFilas(PistasFilas, LongitudFila, TodasLasSoluciones),
     !, % no mas backtracking desde este punto, ya tenemos las soluciones de cada fila
 
+    % Con TodasLasSoluciones seleccionar de a un elemento de cada uno
+    % construir la grilla, transponer y checkear que se satisfacen todas las columnas
+    % Como las filas ya estan trivialmente satisfechas, cuando todas las columnas se satisfacen 
+    % a la vez, esta resuelto el tablero, y se puede devolver a la parte de JS
     testearCombinaciones(PistasColumnas, TodasLasSoluciones, GrillaResuelta).
 	% write("Resultado "), write(GrillaResuelta), nl.
 
