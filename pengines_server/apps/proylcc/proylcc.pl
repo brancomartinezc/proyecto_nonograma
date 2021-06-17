@@ -4,7 +4,6 @@
 	]).
 :-use_module(library(lists)).
 :-use_module(library(clpfd)).
-:- use_rendering(table).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -113,62 +112,48 @@ satisface(RowN, PistasLineas, GrillaLineas, LineaSat) :-
     solve([[3], [1,2], [3], [5], [5]], [[2], [5], [1,3], [5], [1, 2]], S), !
     solve([[2,1], [1,3], [1,2], [3], [4]], [[1], [5], [2], [4], [2,1], [2]], S), !
 
-    configuracion( [[["X", "X", "#", "#", "#"], ["X", "#", "#", "#", "X"], ["#", "#", "#", "X", "X"]], [["X", "#", "X", "#", "#"], ["#", "X", "X", "#", "#"], ["#", "X", "#", "#", "X"]], [["X", "X", "#", "#", "#"], ["X", "#", "#", "#", "X"], ["#", "#", "#", "X", "X"]], [["#", "#", "#", "#", "#"]], [["#", "#", "#", "#", "#"]]], Config), !
-
     El cut al final es porque genera varias veces la misma solucion
     Entonces corta el backtracking y deja una sola hecha
+
+    Generar una configuracion correcta de entre estas soluciones
+    configuracion( [[["X", "X", "#", "#", "#"], ["X", "#", "#", "#", "X"], ["#", "#", "#", "X", "X"]], [["X", "#", "X", "#", "#"], ["#", "X", "X", "#", "#"], ["#", "X", "#", "#", "X"]], [["X", "X", "#", "#", "#"], ["X", "#", "#", "#", "X"], ["#", "#", "#", "X", "X"]], [["#", "#", "#", "#", "#"]], [["#", "#", "#", "#", "#"]]], Config), !
 */
 
-% Intercambiar TodasLasSoluciones por GrillaResuelta despues
+% solve toma las pistas de las filas y de las columnas
+% Encuentra en GrillaResuelta una solucion para el tablero (si existe)
+% Las dimensiones se infieren de la longitud de las listas de pistas
 solve(PistasFilas, PistasColumnas, GrillaResuelta) :-
     length(PistasColumnas, LongitudFila),
     generarSolucionesDeTodasLasFilas(PistasFilas, LongitudFila, TodasLasSoluciones),
-    length(TodasLasSoluciones, Sols), % debug
-	%write("Hay "), write(Sols), write(" arreglos de soluciones: "), nl, % debug
-    !, % no mas backtracking desde este punto, ya tenemos las soluciones
+    !, % no mas backtracking desde este punto, ya tenemos las soluciones de cada fila
 
-    % Con TodasLasSoluciones seleccionar de a un elemento de cada uno
-    % construir la grilla, transponer y checkear que se satisfacen todas las columnas
-    % Como las filas ya estan trivialmente satisfechas, cuando todas las columnas se satisfacen 
-    % a la vez, esta resuelto el tablero, y se puede devolver a la parte de JS
-    % Multiples soluciones para un tablero?
     testearCombinaciones(PistasColumnas, TodasLasSoluciones, GrillaResuelta).
 	% write("Resultado "), write(GrillaResuelta), nl.
 
 %%%%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %%%%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-/*
- * Dado un tablero NxM, testearCombinaciones(N, [M pistas], [N arreglos de soluciones de cada una de las N filas], GrillaFinal)
- * Encuentra una config que satisface las columnas al transponer la grilla compuesta por la eleccion de
- * una solucion por fila de entre el arreglo de soluciones
- * */
-% agregar un parametro mas que tiene la grilla resuelta
+% testearCombinaciones(+PistasColumnas, +Soluciones, -Config)
+% Dado un tablero NxM testearCombinaciones(N, [M pistas], [N arreglos de soluciones de cada una de las N filas], GrillaFinal)
+% encuentra una config que satisface las columnas al transponer la grilla compuesta por la eleccion de
+% una solucion por fila de entre el arreglo de soluciones
+% 
 testearCombinaciones(PistasColumnas, Soluciones, Config) :-
     configuracion(Soluciones, Config), % config es una grilla posible tomando de a una solucion por fila
-    % write("Config: "),write(Config), nl, % debug
+
     % Se transpone esta grilla para ver si las columnas son satisfechas
     % Como las filas estan compuestas siempre de sus soluciones, con solo validar las columnas es suficiente
     % para determinar si tenemos una solucion valida al tablero
     transpose(Config,ConfigRotada),
-    % write("Config rotada:"),write(ConfigRotada),nl, % debug
     testearSolucion(ConfigRotada,PistasColumnas).
-    % write("Config Correcta:"),write(Config),nl. % debug
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % testearSolucion(+Lineas, +Pistas)
+% Dado un tablero transpuesto donde se asume que las columnas (antes filas) ya tienen una solucion correcta
+% se verifica que todas las filas (antes columnas) satisfacen sus pistas correspondientes
 testearSolucion([],[]).
 testearSolucion([L|Ls],[P|Ps]):-
-    /*
-	% assert length(Lineas) == length(Pistas)?
-    length(Ls, LenL),
-    length(Ps, LenP),
-    LengthLineas is LenL  + 1,
-    LengthPistas is LenP + 1,
-    write("Cantidad de lineas en testearSolucion "),write(LengthLineas), nl,
-    write("Cantidad de pistas en testearSolucion "),write(LengthPistas), nl,
-    */
     split(L,"X",Grupos),
     verificarSolucion(P,Grupos),
     testearSolucion(Ls,Ps). 
@@ -179,6 +164,8 @@ testearSolucion([L|Ls],[P|Ps]):-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % configuracion(+SolucionesDeTodasLasFilas, -ConfiguracionPosible)
+% Genera una configuracion de tablero a partir de todas las soluciones
+% posibles para cada fila. Se pueden obtener todas con un findall o similar
 configuracion([], []).
 configuracion([Soluciones | RestoDeLasSoluciones], Configuracion) :-
     member(SolucionPosible, Soluciones), % tomar uno de entre todas las soluciones de una de las filas
@@ -189,6 +176,8 @@ configuracion([Soluciones | RestoDeLasSoluciones], Configuracion) :-
 % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
 
 % generarSolucionesDeTodasLasFilas(+Pistas, +LongitudFila, -ListaSoluciones)
+% Dadas las pistas y la longitud de las filas, se generan todas las soluciones
+% de cada fila posibles, una a una (usando generarSolucionesDeUnaFila)
 generarSolucionesDeTodasLasFilas([], _LF, []).
 generarSolucionesDeTodasLasFilas([P | Ps], LongitudFila, ListaSoluciones) :-
     generarSolucionesDeUnaFila(P, LongitudFila, Soluciones),
@@ -197,6 +186,7 @@ generarSolucionesDeTodasLasFilas([P | Ps], LongitudFila, ListaSoluciones) :-
 
 % ~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+~~~~~~~~~~~~~~~~+
 % [1,3] -> [todas las soluciones de longitud LongitudLinea que conforman [1,3]]
+% Se generan con un findall que encuentra solo las lineas de LongitudLinea correctas
 generarSolucionesDeUnaFila(PistasFila, LongitudLinea, SolucionesFila) :-
     length(Solucion, LongitudLinea),
     grupos(PistasFila, Grupos),
