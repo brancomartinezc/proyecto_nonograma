@@ -21,6 +21,10 @@ class Game extends React.Component {
       mode: "#",
       filasCorrectas: [],
       colsCorrectas: [],
+      filasActual: [],
+      colsActual: [],
+      filaUnos: [],
+      colUnos: [],
       gameWon: false,
       statusText: "Juego en progreso."
     };
@@ -44,10 +48,12 @@ class Game extends React.Component {
         //inicializacion de arreglos de control de filas y columnas correctas.
         this.state.grid.forEach(() => {
           this.state.filasCorrectas.push(0);
+          this.state.filaUnos.push(1);
         });
 
         this.state.grid[0].forEach(() => {
           this.state.colsCorrectas.push(0);
+          this.state.colUnos.push(1);
         });
 
         this.obtenerSolucion();
@@ -87,7 +93,7 @@ class Game extends React.Component {
 
     if (this.state.estadoRevelandoCelda) {
         // Si el valor actual ya coincide con el valor correcto, revelar no deberia limpiar la celda, asi que se retorna
-        if (this.state.grid[i][j] == this.state.grillaResuelta[i][j]) {
+        if (this.state.grid[i][j] === this.state.grillaResuelta[i][j]) {
           return;
         } else {
           // En este caso, se revela la celda correcta
@@ -151,11 +157,17 @@ class Game extends React.Component {
       this.setState({ 
         estadoRevelandoTablero: true,
         grillaEnJuego: this.state.grid, //guarda la grilla del jugador
+        filasActual: this.state.filasCorrectas, //guarda las filas correctas del jugador
+        colsActual: this.state.colsCorrectas, //guarda las cols correctas del jugador
+        filasCorrectas: this.state.filaUnos,
+        colsCorrectas: this.state.colUnos,
         grid: this.state.grillaResuelta
       });  
     }else{
       this.setState({ 
         estadoRevelandoTablero: false,
+        filasCorrectas: this.state.filasActual,
+        colsCorrectas: this.state.colsActual,
         grid: this.state.grillaEnJuego
       });
     }
