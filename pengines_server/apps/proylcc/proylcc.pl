@@ -1,7 +1,4 @@
-:- module(proylcc,
-	[  
-		put/8
-	]).
+:- module(proylcc, [ put/8, solve/3 ]).
 :-use_module(library(lists)).
 :-use_module(library(clpfd)).
 
