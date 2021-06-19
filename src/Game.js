@@ -14,9 +14,17 @@ class Game extends React.Component {
       rowClues: null,
       colClues: null,
       waiting: false,
+      grillaEnJuego: null,
+      grillaResuelta: null,
+      estadoRevelandoCelda: false,
+      estadoRevelandoTablero: false,
       mode: "#",
       filasCorrectas: [],
       colsCorrectas: [],
+      filasActual: [],
+      colsActual: [],
+      filaUnos: [],
+      colUnos: [],
       gameWon: false,
       statusText: "Juego en progreso."
     };
@@ -40,18 +48,37 @@ class Game extends React.Component {
         //inicializacion de arreglos de control de filas y columnas correctas.
         this.state.grid.forEach(() => {
           this.state.filasCorrectas.push(0);
+          this.state.filaUnos.push(1);
         });
 
         this.state.grid[0].forEach(() => {
           this.state.colsCorrectas.push(0);
+          this.state.colUnos.push(1);
         });
+
+        this.obtenerSolucion();
       }
     });
   }
 
+  //query a prolog para obtener la solucion de la grilla
+  obtenerSolucion(){
+    const filas = JSON.stringify(this.state.rowClues);
+    const columnas = JSON.stringify(this.state.colClues);
+    const queryS = `solve(${filas}, ${columnas}, Solucion)`;
+
+    this.pengine.query(queryS, (succes, response) => {
+      if(succes){
+        this.setState({
+          grillaResuelta: response['Solucion']
+        });
+      }
+    });
+  }
+  
   handleClick(i, j) {
-    // No action on click if we are waiting.
-    if (this.state.waiting) {
+    // No permitir interaccion con el usuario en ambos casos
+    if (this.state.waiting || this.state.estadoRevelandoTablero) {
       return;
     }
     
@@ -61,7 +88,22 @@ class Game extends React.Component {
     
     // Build Prolog query to make the move, which will look as follows:
     // put("#",[0,1],[], [],[["X",_,_,_,_],["X",_,"X",_,_],["X",_,_,_,_],["#","#","#",_,_],[_,_,"#","#","#"]], GrillaRes, FilaSat, ColSat)
-    const queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+    // si esta revelando celda se pinta lo que coresponde, sino, se pinta lo que el jugador eligio
+    let queryS;
+
+    if (this.state.estadoRevelandoCelda) {
+        // Si el valor actual ya coincide con el valor correcto, revelar no deberia limpiar la celda, asi que se retorna
+        if (this.state.grid[i][j] === this.state.grillaResuelta[i][j]) {
+          return;
+        } else {
+          // En este caso, se revela la celda correcta
+          queryS = `put("${this.state.grillaResuelta[i][j]}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+        }
+    } else {
+      // En este caso no se esta revelando, asi que se envia a Prolog el valor seleccionado por el usuario
+      queryS = `put("${this.state.mode}", [${i}, ${j}], ${filas}, ${columnas}, ${squaresS}, GrillaRes, FilaSat, ColSat)`;
+    }
+
     //console.log(queryS); //DEBUG
 
     this.setState({
@@ -103,10 +145,45 @@ class Game extends React.Component {
   }
 
   modeClick(){
-    if(this.state.mode === "#"){
+    if (this.state.mode === "#"){
       this.setState({ mode: "X" });
-    }else{
+    } else{
       this.setState({ mode: "#" });
+    }
+  }
+
+  revelarTablero() {
+    if(!this.state.estadoRevelandoTablero){
+      this.setState({ 
+        estadoRevelandoTablero: true,
+        grillaEnJuego: this.state.grid, //guarda la grilla del jugador
+        filasActual: this.state.filasCorrectas, //guarda las filas correctas del jugador
+        colsActual: this.state.colsCorrectas, //guarda las cols correctas del jugador
+        filasCorrectas: this.state.filaUnos,
+        colsCorrectas: this.state.colUnos,
+        grid: this.state.grillaResuelta
+      });  
+    }else{
+      this.setState({ 
+        estadoRevelandoTablero: false,
+        filasCorrectas: this.state.filasActual,
+        colsCorrectas: this.state.colsActual,
+        grid: this.state.grillaEnJuego
+      });
+    }
+  }
+
+  revelarCelda() {
+    if(!this.state.estadoRevelandoCelda){
+      this.setState({ 
+        estadoRevelandoCelda: true,
+        statusText: "Revelando celdas."
+      });
+    }else{
+      this.setState({ 
+        estadoRevelandoCelda: false,
+        statusText: "Juego en progreso."
+      });
     }
   }
 
@@ -119,8 +196,9 @@ class Game extends React.Component {
       <div className="game">
         <h1>Nonograma</h1>
         <div>
-          Modo actual: <Mode value={this.state.mode} gameWon={this.state.gameWon} onClick={() => this.modeClick()}/>
+          Modo actual: <Mode value={this.state.mode} class={"square"} gameWon={this.state.gameWon} onClick={() => this.modeClick()}/>
         </div>
+
         {<div className="gameInfo">
           {this.state.statusText}
         </div>}
@@ -134,6 +212,14 @@ class Game extends React.Component {
           columnasCorrectas={this.state.colsCorrectas}
           onClick={(i, j) => this.handleClick(i,j)}
         />
+
+        <div>
+          <Mode value={"🔍 Revelar celda"} class={"revelarCelda"} gameWon={this.state.gameWon} onClick={() => this.revelarCelda()}/>
+        </div>
+
+        <div>
+          <Mode value={"🏁 Revelar tablero"} class={"revelarTablero"} gameWon={this.state.gameWon} onClick={() => this.revelarTablero()}/>
+        </div>
       </div>
     );
   }
